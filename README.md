@@ -58,3 +58,5 @@ Note that when running as a script, the `multiprocessing.freeze_support()` line 
     # and then re-run the fit
 ```
 
+## Testing
+`test_parallel_fits.py` will run the tests for multiple different types of binary models (this assumes `PINT` has been installed from source, so that the test data are available).
