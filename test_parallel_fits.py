@@ -7,6 +7,7 @@ from pathlib import Path
 import pint
 from pint.models import get_model_and_toas
 import pint.logging
+import json
 import parallel_fit
 
 testdata = Path(pint.__file__).resolve().parent.parent.parent / "tests/datafile"
@@ -55,3 +56,10 @@ if __name__ == "__main__":
         results = tf.run(maxiter=20)
 
         print(f"Finished test '{testtype}' at {Time.now().iso}\n\n")
+        with open(f"{testtype}_results.json", "w") as fo:
+            json.dump(
+                results,
+                fo,
+                indent=4,
+                default=parallel_fit.astropy_numpy_json_serializer,
+            )
