@@ -53,7 +53,13 @@ _linked_pars_to_remove = {
 
 
 def astropy_numpy_json_serializer(obj):
-    """Serializer to allow dumping of results including quantities and np data to JSON"""
+    """Serializer to allow dumping of results including quantities and np data to JSON
+
+    Usage
+    -----
+    >>> s=json.dumps(results,default=parallel_fit.astropy_numpy_json_serializer)
+
+    """
     if isinstance(obj, u.Quantity):
         return {
             "value": (
@@ -66,6 +72,19 @@ def astropy_numpy_json_serializer(obj):
     elif isinstance(obj, (np.float64, np.longdouble)):
         return float(obj)
     raise TypeError(f"Object of type {obj.__class__.__name__} is not JSON serializable")
+
+
+def astropy_json_decoder(dct):
+    """Decoder to convert JSON back to astropy quantities
+
+    Usage
+    -----
+    >>> json.loads(s,object_hook=parallel_fit.astropy_json_decoder)
+
+    """
+    if "unit" in dct:
+        return u.Quantity(dct["value"], unit=dct["unit"])
+    return dct
 
 
 class TestFitter:
