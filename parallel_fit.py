@@ -50,6 +50,8 @@ _linked_pars_to_remove = {
     "EPS2DOT": ["EPS1DOT"],
     "H3": ["H4"],
 }
+# do not initialize these to 0
+_default_values = {"SINI": 0.5, "STIGMA": 0.5}
 
 
 def astropy_numpy_json_serializer(obj):
@@ -190,11 +192,12 @@ class TestFitter:
                 self.extraparnames += self.defaults["ddkextraparnames"]
         for j in range(1, maxFD + 1):
             self.extraparnames.append(f"FD{j}")
+        default_values = self.defaults["default_values"].copy()
 
         # which actually have to be added to create the maximal model
         # because they are not in the model or are in but UNSET
         self.extrapars = {
-            x: 0
+            x: default_values.get(x, 0)
             for x in self.extraparnames
             if not x in self.m_base.params or self.m_base[x].value is None
         }
@@ -205,7 +208,6 @@ class TestFitter:
         else:
             self.m = get_model(self.parfile, **self.extrapars)
             self.t = copy.deepcopy(self.toas)
-
         self.addpars = []
         self.removepars = []
         for p in self.extraparnames:
@@ -339,6 +341,7 @@ class TestFitter:
         self.defaults["ddkextraparnames"] = _ddkextraparnames
         self.defaults["linked_pars_to_add"] = _linked_pars_to_add
         self.defaults["linked_pars_to_remove"] = _linked_pars_to_remove
+        self.defaults["default_values"] = _default_values
 
     def run(
         self,
