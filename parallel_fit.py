@@ -213,7 +213,7 @@ class TestFitter:
 
         """
         if self.extrapars is None:
-            self.setextrapars()
+            self.setextrapars(maxFB=maxFB, maxFD=maxFD)
         default_values = self.defaults["default_values"].copy()
 
         # which actually have to be added to create the maximal model
