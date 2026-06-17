@@ -242,10 +242,10 @@ class TestFitter:
                 or self.m_base[p].value == 0
             ):
                 self.addpars.append(p)
-                log.debug(f"Testing addition of {p}")
+                log.info(f"Testing addition of {p}")
             else:
                 self.removepars.append(p)
-                log.debug(f"Testing removal of {p}")
+                log.info(f"Testing removal of {p}")
 
         self.f0 = pint.fitter.Fitter.auto(self.t, self.m)
         self.linked_pars_to_add = self.defaults["linked_pars_to_add"].copy()
