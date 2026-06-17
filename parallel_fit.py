@@ -155,12 +155,17 @@ class TestFitter:
             raise ValueError("Must supply either parfile/timfile or model/toas")
         self.defaults = {}
         self.set_defaults()
+        self.extrapars = None
         # load in the base model first to see which parameters needs to be added vs removed
         self.setup(maxFB=maxFB, maxFD=maxFD)
 
-    def setup(self, maxFB: int = 5, maxFD: int = 5, baseline: bool = True):
+    def setextrapars(
+        self,
+        maxFB: int = 5,
+        maxFD: int = 5,
+    ):
         """
-        Set up the correct combinations of tests based on the loaded timing model and the current lists of parameters
+        Define the extra parameters to test.
 
         If the lists of parameters change (e.g., from an external file) this can be re-run
 
@@ -170,8 +175,6 @@ class TestFitter:
             Maximum FB number to include
         maxFD: int, optional
             Maximum FD number to include
-        baseline: bool, optional
-            Whether or not to include the baseline model (with no parameters added or removed)
 
         """
         self.extraparnames = self.defaults["extraparnames"].copy()
@@ -192,6 +195,25 @@ class TestFitter:
                 self.extraparnames += self.defaults["ddkextraparnames"]
         for j in range(1, maxFD + 1):
             self.extraparnames.append(f"FD{j}")
+
+    def setup(self, maxFB: int = 5, maxFD: int = 5, baseline: bool = True):
+        """
+        Set up the correct combinations of tests based on the loaded timing model and the current lists of parameters
+
+        If the lists of parameters change (e.g., from an external file) this can be re-run
+
+        Parameters
+        ----------
+        maxFB: int, optional
+            Maximum FB number to include
+        maxFD: int, optional
+            Maximum FD number to include
+        baseline: bool, optional
+            Whether or not to include the baseline model (with no parameters added or removed)
+
+        """
+        if self.extrapars is None:
+            self.setextrapars()
         default_values = self.defaults["default_values"].copy()
 
         # which actually have to be added to create the maximal model
@@ -207,6 +229,9 @@ class TestFitter:
             )
         else:
             self.m = get_model(self.parfile, **self.extrapars)
+            # rewind to preserve for future reads
+            if isinstance(self.parfile, io.StringIO):
+                self.parfile.seek(0)
             self.t = copy.deepcopy(self.toas)
         self.addpars = []
         self.removepars = []
