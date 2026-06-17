@@ -115,6 +115,11 @@ class TestFitter:
     >>> tf.defaults['extraparnames'].remove('F2')
     >>> tf.setup(maxFD=4)
     # and then re-run the fit
+
+    # Or you can do it like:
+    >>> for p in ["PX", "M2", "F2", "SINI", "A1DOT", "EPS1DOT", "EPS2DOT"]:
+            tf.extraparnames.remove(p)
+    >>> tf.setup()
     """
 
     def __init__(
