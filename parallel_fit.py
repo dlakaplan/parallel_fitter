@@ -120,6 +120,100 @@ class TestFitter:
     >>> for p in ["PX", "M2", "F2", "SINI", "A1DOT", "EPS1DOT", "EPS2DOT"]:
             tf.extraparnames.remove(p)
     >>> tf.setup()
+
+    # to limit the number of CPUs used:
+    >>> results = tf.run(maxiter=20, ncpu=2)
+
+    # There are errors that come from using the parallel execution in a `main` program.  Avoid those like::
+    ```
+    import multiprocessing
+    import pint.logging
+    import parallel_fit
+
+    if __name__ == "__main__":
+        __spec__ = None
+        multiprocessing.freeze_support()
+
+        pint.logging.setup("INFO")
+        ...
+    ```
+
+    # To run on a `slurm` system where the jobs are distributed to different nodes::
+    ```
+    import multiprocessing
+    from pathlib import Path
+    import pint
+    from pint.models import get_model_and_toas
+    import pint.logging
+    import sys
+    import datetime
+    import json
+    import cfut
+    import concurrent.futures
+    import parallel_fit
+
+    # these determine the node type, outout destination
+    # and also the specific conda environment to load
+    # customize as needed
+    slurm_options = ["#SBATCH --cpus-per-task=1",
+                    "#SBATCH --mem=32g",
+                    "#SBATCH --partition=256g",
+                    "#SBATCH --output=slurm/slurm-%j-%n-%N.out",
+                    "#SBATCH --error=slurm/slurm-%j-%n-%N.err",
+                    "source /sharedapps/LS/cgca/conda/bin/activate pintdev_312"]
+
+    def main():
+        pint.logging.setup("DEBUG")
+
+        log.info(f"Starting at {datetime.datetime.now().isoformat()}")
+        print(f"Starting at {datetime.datetime.now().isoformat()}")
+
+        multiprocessing.freeze_support()
+
+
+        m, t = get_model_and_toas(...)
+        tf = parallel_fit.TestFitter(model=m, toas=t)
+        # use this for SLURM
+        with cfut.SlurmExecutor(debug=True,keep_logs=True,additional_setup_lines=slurm_options) as executor:
+            results=tf.run(maxiter=20, executor=executor, printprogress=False)
+            print(
+                f"Finished at {datetime.datetime.now().isoformat()}"
+                )
+            log.info(
+                f"Finished at {datetime.datetime.now().isoformat()}"
+                )
+
+            with open(..., "w") as fo:
+                json.dump(
+                    results,
+                    fo,
+                    indent=4,
+                    default=parallel_fit.astropy_numpy_json_serializer,
+                )
+
+    if __name__ == "__main__":
+        multiprocessing.freeze_support()
+        main()
+    ```
+    # Note that I found this worked with `cfut==0.4` and not the latest version.
+    # The above command should be saved to a file and the run with `srun` or `sbatch`.  The following worked
+    # but is also probably redundant::
+    ```
+    #!/bin/bash -l
+    #SBATCH --cpus-per-task=1
+    #SBATCH --mem=16g
+    #SBATCH --output=slurm/slurm-%j.out
+    #SBATCH --error=slurm/slurm-%j.err
+
+    # use pintdev environment to use gridding updates
+    conda activate pintdev_312
+
+    echo "Starting"
+    date
+    srun -u python ...
+    echo "Done"
+    date
+    ```
     """
 
     def __init__(
